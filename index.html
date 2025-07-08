@@ -6,12 +6,17 @@
   <title>Dragon Timing Minigame</title>
   <link rel="stylesheet" href="style.css">
   <style>
+    html, body {
+      overflow: hidden; /* Prevent scrolling on mobile */
+    }
     /* Ensure mute button is on top and clickable */
+    #muteToggle { z-index: 1000; pointer-events: auto; }
 
     @media (max-width: 600px) {
       #container {
         flex-direction: column;
         align-items: center;
+        overflow: hidden;
       }
       #leftPanel, #rightPanel {
         width: 100%;
@@ -22,31 +27,28 @@
       #gameCanvas {
         margin: 0 auto;
       }
+      #rightPanel {
+        flex-direction: row;
+        justify-content: center;
+        gap: 0.5rem;
+      }
       #rightPanel img {
-        max-width: 50%;
+        max-width: 30%;
         height: auto;
       }
       /* Make buttons full-width and taller on mobile */
       #attackBtn, #restart {
         width: 90%;
-        height: 3rem;
+        height: 3.5rem;
         font-size: 1.2rem;
         margin: 0.5rem 0;
       }
     }
+
     /* Desktop: hide attackBtn */
     #attackBtn { display: none; }
     @media (max-width: 600px) {
       #attackBtn { display: block; }
-    }
-
-    /* Ensure mute button is on top and clickable */
-    #muteToggle { z-index: 1000; pointer-events: auto; }
-    /* Mobile-specific image scaling */
-    @media (max-width: 600px) {
-      #rightPanel img { max-width: 50%; height: auto; }
-      /* Make buttons full-width on mobile */
-      #attackBtn, #restart { width: 100%; }
     }
   </style>
 </head>
@@ -56,6 +58,7 @@
 
   <div id="container">
     
+
     <div id="leftPanel">
       <div id="bossBarContainer"><div id="bossBar"></div></div>
       <canvas id="gameCanvas" width="300" height="300" tabindex="0"></canvas>
@@ -76,6 +79,7 @@
       <img id="explosion" src="src/boom1.gif" alt="Explosion" />
     </div>
   </div>
+  
 
   <!-- Sound Effects -->
   <audio id="flap" src="src/flap.mp3" loop muted></audio>

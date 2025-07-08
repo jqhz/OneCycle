@@ -4,7 +4,7 @@ const SEG_WF=1.5, TOTAL_ARC=2*OUTER_TH*SEG_WF, SEG_ARC=TOTAL_ARC/SEGMENTS;
 const DEBOUNCE_MS=300;
 
 let dragonHealth, attempt, wheelAngle, targetAngle, gameOver, animId;
-let lastKeyTime=0, soundsOn=false, justRestarted=false;
+let lastKeyTime=0, soundsOn=false, justRestarted=false, lastTime=performance.now();
 const c=document.getElementById('gameCanvas'), ctx=c.getContext('2d');
 const CX=c.width/2, CY=c.height/2, R=120;
 const healthEl=document.getElementById('health');
@@ -20,6 +20,7 @@ const flapSfx=document.getElementById('flap');
 const explodeSfx=document.getElementById('explode');
 const muteBtn=document.getElementById('muteToggle');
 const attackBtn=document.getElementById('attackBtn');
+const now = performance.now();
 
 const SEG_COLORS=Array.from({length:SEGMENTS},(_,i)=>{
   const t=i/(SEGMENTS-1),g=Math.round(255*(1-t));
@@ -29,10 +30,15 @@ const SEG_COLORS=Array.from({length:SEGMENTS},(_,i)=>{
 function randAngle(){ return Math.random()*2*Math.PI; }
 function updateBossBar(){ bossBar.style.width=(dragonHealth/MAX_HEALTH*100)+'%'; }
 
-function doAttack(){
-  const now = Date.now();
-  if (now - lastKeyTime < DEBOUNCE_MS || justRestarted) return;
+function doAttack(fromKey=false){
+  const now = performance.now();
+
+  // Only debounce key input
+  if (fromKey && now - lastKeyTime < DEBOUNCE_MS) return;
+
   lastKeyTime = now;
+
+  if (justRestarted) return;
 
   if (gameOver) {
     init();
@@ -47,6 +53,7 @@ function doAttack(){
     explodeSfx.currentTime = 0;
     explodeSfx.play();
   }
+
   bedImg.style.visibility = 'hidden';
   explImg.style.opacity = 1;
   setTimeout(() => {
@@ -77,6 +84,7 @@ function doAttack(){
   targetAngle = randAngle();
 }
 
+
 function draw(){
   ctx.clearRect(0,0,c.width,c.height);
   ctx.beginPath();ctx.arc(CX,CY,R,0,2*Math.PI);ctx.fillStyle='#444';ctx.fill();
@@ -94,8 +102,11 @@ function draw(){
 }
 
 function loop(){
-  wheelAngle=(wheelAngle+SPIN_SPEED)%(2*Math.PI);
-  draw();animId=requestAnimationFrame(loop);
+  wheelAngle += SPIN_SPEED * (60 / (1000 / (performance.now() - lastTime)));
+  wheelAngle %= 2 * Math.PI;
+  lastTime = performance.now();
+  draw();
+  animId = requestAnimationFrame(loop);
 }
 
 function end(won){
@@ -107,10 +118,20 @@ function end(won){
 
 window.addEventListener('keydown', e => {
   if (!(e.code === 'Space' || e.key === ' ' || e.keyCode === 32)) return;
-  doAttack();
+  doAttack(true); // key input — debounce applies
 });
 
-attackBtn.addEventListener('click', doAttack);
+attackBtn.addEventListener('click', e => {
+  e.preventDefault();
+  e.stopImmediatePropagation();
+  doAttack(false); // mouse input — debounce skipped
+});
+attackBtn.addEventListener('touchstart', e => {
+  e.preventDefault();
+  e.stopImmediatePropagation();
+  doAttack(false); // touch input — debounce skipped
+});
+
 btn.addEventListener('click', () => init());
 muteBtn.addEventListener('click', () => {
   soundsOn = !soundsOn;

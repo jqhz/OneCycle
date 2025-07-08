@@ -3,92 +3,13 @@
 <head>
   <meta charset="UTF-8" />
   <title>Dragon Timing Minigame</title>
-  <style>
-    * { box-sizing: border-box; margin:0; padding:0 }
-    body, html {
-      width:100%; height:100%;
-      display:flex; align-items:center; justify-content:center;
-      background:#111; color:#fff; font-family:sans-serif;
-    }
-    #container {
-      display: flex;
-      align-items: flex-start;
-      gap: 2rem;
-      position: relative;
-    }
-    #leftPanel {
-      position: relative;
-    }
-    #gameCanvas {
-      background:#222;
-      display:block;
-      border:2px solid #555;
-      outline:none;
-    }
-    #ui {
-      margin-top: 1rem;
-      text-align: center;
-    }
-    #status span { margin: 0 1rem }
-    #lastHit {
-      margin-top:0.5rem; font-size:0.9rem; color:#ff8;
-    }
-    #overlay {
-      position:absolute; top:0; left:0; right:0; bottom:0;
-      display:flex; align-items:center; justify-content:center;
-      font-size:2rem; opacity:0; pointer-events:none;
-      transition:opacity 0.3s ease;
-    }
-    #overlay.show { opacity:1; pointer-events:none }
-    #overlay.win { color:#0f0 }
-    #overlay.lose { color:#f44 }
-    #rightPanel {
-      position: relative;
-      width: 200px;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 1rem;
-    }
-    #enderDragon {
-      width: 100%;
-      height: auto;
-    }
-    #bed {
-      width: 100%; height: auto;
-    }
-    #explosion {
-      position: absolute;
-      top:0; left:0;
-      width: 100%; height: auto;
-      opacity: 0;
-      transition: opacity 0.1s;
-    }
-    #bossBarContainer {
-      position: absolute;
-      top: -2rem;
-      left: 0;
-      right: 0;
-      height: 1rem;
-      background: #444;
-      border-radius: 4px;
-      overflow: hidden;
-    }
-    #bossBar {
-      height: 100%;
-      background: purple;
-      width: 100%;
-      transition: width 0.2s;
-    }
-    button {
-      margin-top:1rem; padding:0.5rem 1rem; font-size:1rem;
-      background:#444; border:none; border-radius:4px;
-      color:#fff; cursor:pointer;
-    }
-    button:hover { background:#666 }
-  </style>
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
+  <!-- Mute Toggle -->
+  <button id="muteToggle" tabindex="-1">🔇</button>
+
+
   <div id="container">
     <div id="leftPanel">
       <div id="bossBarContainer"><div id="bossBar"></div></div>
@@ -104,154 +25,16 @@
       </div>
     </div>
     <div id="rightPanel">
-      <!-- Placeholder for Ender Dragon image -->
       <img id="enderDragon" src="src/endy_dragon.gif" alt="Ender Dragon" />
       <img id="bed" src="src/White_Bed.png" alt="Bed" />
       <img id="explosion" src="src/boom1.gif" alt="Explosion" />
     </div>
   </div>
 
-  <!-- Background and sound effects -->
-  <audio id="flap" src="src/flap.mp3" loop></audio>
-  <audio id="explode" src="src/explode.mp3"></audio>
+  <!-- Sound Effects -->
+  <audio id="flap" src="src/flap.mp3" loop muted></audio>
+  <audio id="explode" src="src/explode.mp3" muted></audio>
 
-  <script>
-  // CONFIG
-  const MAX_HEALTH    = 200;
-  const MAX_ATTEMPTS  = 5;
-  const MAX_DMG       = 50;
-  const MIN_DMG       = 15;
-  const OUTER_TH      = 20 * Math.PI/180;
-  const SPIN_SPEED    = 0.04; // radians per frame
-  const SEGMENTS      = 5;
-  const SEGMENT_WIDTH_FACTOR = 1.5;
-  const TOTAL_ARC     = 2 * OUTER_TH * SEGMENT_WIDTH_FACTOR;
-  const SEG_ARC       = TOTAL_ARC / SEGMENTS;
-  const DEBOUNCE_MS   = 300;
-
-  // STATE & DOM
-  let dragonHealth, attempt, wheelAngle, targetAngle, gameOver, animId;
-  let lastKeyTime = 0;
-  const c    = document.getElementById('gameCanvas');
-  const ctx  = c.getContext('2d');
-  const CX   = c.width/2, CY = c.height/2, R = 120;
-  const healthEl = document.getElementById('health');
-  const attEl    = document.getElementById('attempt');
-  const hitEl    = document.getElementById('hitAmt');
-  const overlay  = document.getElementById('overlay');
-  const msg      = document.getElementById('message');
-  const btn      = document.getElementById('restart');
-  const bossBar  = document.getElementById('bossBar');
-  const bedImg   = document.getElementById('bed');
-  const explImg  = document.getElementById('explosion');
-  const dragonImg = document.getElementById('enderDragon');
-  const flapSfx   = document.getElementById('flap');
-  const explodeSfx= document.getElementById('explode');
-
-  // colors yellow->red
-  const SEG_COLORS = Array.from({length:SEGMENTS}, (_,i) => {
-    const t = i/(SEGMENTS-1);
-    const g = Math.round(255*(1-t));
-    return `rgb(255,${g},0)`;
-  });
-
-  function randAngle(){ return Math.random()*2*Math.PI }
-
-  function init(){
-    cancelAnimationFrame(animId);
-    dragonHealth  = MAX_HEALTH;
-    attempt       = 0;
-    wheelAngle    = 0;
-    targetAngle   = randAngle();
-    gameOver      = false;
-    lastKeyTime   = 0;
-    healthEl.textContent = dragonHealth;
-    attEl.textContent    = attempt;
-    hitEl.textContent    = '—';
-    overlay.className    = '';
-    updateBossBar();
-    bedImg.style.visibility = 'visible';
-    explImg.style.opacity = 0;
-    flapSfx.currentTime = 0;
-    flapSfx.play();
-    c.focus();
-    loop();
-  }
-
-  function updateBossBar(){
-    const pct = (dragonHealth / MAX_HEALTH) * 100;
-    bossBar.style.width = pct + '%';
-  }
-
-  function draw(){
-    ctx.clearRect(0,0,c.width,c.height);
-    ctx.beginPath(); ctx.arc(CX,CY,R,0,2*Math.PI);
-    ctx.fillStyle='#444'; ctx.fill();
-    ctx.beginPath(); ctx.arc(CX,CY,R+8,0,2*Math.PI);
-    ctx.strokeStyle='#555'; ctx.lineWidth=16; ctx.stroke();
-    for(let i=0;i<SEGMENTS;i++){
-      const start = targetAngle - TOTAL_ARC/2 + i*SEG_ARC;
-      ctx.beginPath();
-      ctx.arc(CX,CY,R+8,start,start+SEG_ARC);
-      ctx.strokeStyle=SEG_COLORS[i]; ctx.lineWidth=16; ctx.stroke();
-    }
-    ctx.strokeStyle='#0f0'; ctx.lineWidth=4;
-    ctx.beginPath(); ctx.moveTo(CX,CY);
-    ctx.lineTo(CX+Math.cos(wheelAngle)*R, CY+Math.sin(wheelAngle)*R);
-    ctx.stroke();
-  }
-
-  function loop(){
-    wheelAngle = (wheelAngle + SPIN_SPEED)%(2*Math.PI);
-    draw();
-    animId = requestAnimationFrame(loop);
-  }
-
-  function end(won){
-    gameOver = true;
-    cancelAnimationFrame(animId);
-    flapSfx.pause();
-    overlay.className = 'show ' + (won?'win':'lose');
-    msg.textContent    = won ? '🎉 You Win!' : '❌ Game Over';
-  }
-
-  window.addEventListener('keydown', e => {
-    const isSpace = e.code==='Space'||e.key===' '||e.keyCode===32;
-    if(!isSpace) return;
-    const now = Date.now();
-    if(now-lastKeyTime<DEBOUNCE_MS) return;
-    lastKeyTime = now;
-    if(gameOver) return init();
-    if(attempt>=MAX_ATTEMPTS) return;
-
-    explodeSfx.currentTime = 0;
-    explodeSfx.play();
-
-    bedImg.style.visibility='hidden';
-    explImg.style.opacity='1';
-    setTimeout(()=>{ explImg.style.opacity='0'; bedImg.style.visibility='visible' },100);
-
-    attempt++;
-    attEl.textContent=attempt;
-    const startEdge=targetAngle-TOTAL_ARC/2;
-    let rel=wheelAngle-startEdge;
-    rel=(rel%(2*Math.PI)+2*Math.PI)%(2*Math.PI);
-    let dmg=0;
-    if(rel<TOTAL_ARC){
-      const idx=Math.min(SEGMENTS-1,Math.floor(rel/SEG_ARC));
-      dmg=Math.round(MIN_DMG + (MAX_DMG-MIN_DMG)*(idx/(SEGMENTS-1)));
-    }
-    dragonHealth=Math.max(0,dragonHealth-dmg);
-    healthEl.textContent=dragonHealth;
-    hitEl.textContent=dmg;
-    updateBossBar();
-    if(dragonHealth===0) return end(true);
-    if(attempt===MAX_ATTEMPTS) return end(false);
-    targetAngle=randAngle();
-  });
-
-  btn.addEventListener('click', init);
-  init();
-  </script>
+  <script src="script.js"></script>
 </body>
 </html>

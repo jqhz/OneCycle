@@ -1,0 +1,51 @@
+* { box-sizing: border-box; margin:0; padding:0 }
+body, html {
+    width:100%; height:100%;
+    display:flex; align-items:center; justify-content:center;
+    background:#111; color:#fff; font-family:sans-serif;
+}
+#container {
+    display: flex;
+    align-items: flex-start;
+    gap: 2rem;
+    position: relative;
+}
+#leftPanel { position: relative; }
+#gameCanvas { background:#222; display:block; border:2px solid #555; outline:none; }
+#ui { margin-top:1rem; text-align:center; }
+#status span { margin:0 1rem; }
+#lastHit { margin-top:0.5rem; font-size:0.9rem; color:#ff8; }
+#overlay {
+    position:absolute; top:0; left:0; right:0; bottom:0;
+    display:flex; align-items:center; justify-content:center;
+    font-size:2rem; opacity:0; pointer-events:none;
+    transition:opacity 0.3s ease;
+}
+#overlay.show { opacity:1; }
+#overlay.win { color:#0f0; }
+#overlay.lose { color:#f44; }
+#rightPanel {
+    position: relative; width:200px;
+    display:flex; flex-direction:column; align-items:center; gap:1rem;
+}
+#enderDragon, #bed { width:100%; height:auto; }
+#explosion {
+    position:absolute; top:0; left:0; width:100%; height:auto;
+    opacity:0; transition:opacity 0.1s;
+}
+#bossBarContainer {
+    position:absolute; top:-2rem; left:0; right:0; height:1rem;
+    background:#444; border-radius:4px; overflow:hidden;
+}
+#bossBar { height:100%; background:purple; width:100%; transition:width 0.2s; }
+button { margin-top:1rem; padding:0.5rem 1rem; font-size:1rem;
+    background:#444; border:none; border-radius:4px; color:#fff; cursor:pointer;
+}
+button:hover { background:#666; }
+/* Mute toggle styling */
+#muteToggle {
+    position:absolute; top:10px; left:10px;
+    background:#444; border:none; border-radius:4px;
+    color:#fff; font-size:1rem; padding:0.3rem 0.6rem;
+    cursor:pointer;
+}

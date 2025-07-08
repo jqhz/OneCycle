@@ -39,7 +39,7 @@
       font-size:2rem; opacity:0; pointer-events:none;
       transition:opacity 0.3s ease;
     }
-    #overlay.show { opacity:1; pointer-events:all }
+    #overlay.show { opacity:1; pointer-events:none }
     #overlay.win { color:#0f0 }
     #overlay.lose { color:#f44 }
     #rightPanel {
@@ -97,7 +97,7 @@
       <div id="ui">
         <div id="status">
           <span>Health: <strong id="health">200</strong></span>
-          <span>Beds: <strong id="attempt">0</strong>/7</span>
+          <span>Beds: <strong id="attempt">0</strong>/5</span>
         </div>
         <div id="lastHit">Last Hit: <span id="hitAmt">—</span></div>
         <button id="restart">Restart</button>
@@ -118,11 +118,11 @@
   <script>
   // CONFIG
   const MAX_HEALTH    = 200;
-  const MAX_ATTEMPTS  = 7;
+  const MAX_ATTEMPTS  = 5;
   const MAX_DMG       = 50;
   const MIN_DMG       = 15;
   const OUTER_TH      = 20 * Math.PI/180;
-  const SPIN_SPEED    = 0.02; // radians per frame
+  const SPIN_SPEED    = 0.04; // radians per frame
   const SEGMENTS      = 5;
   const SEGMENT_WIDTH_FACTOR = 1.5;
   const TOTAL_ARC     = 2 * OUTER_TH * SEGMENT_WIDTH_FACTOR;

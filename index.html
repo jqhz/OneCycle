@@ -2,15 +2,60 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Dragon Timing Minigame</title>
   <link rel="stylesheet" href="style.css">
+  <style>
+    /* Ensure mute button is on top and clickable */
+
+    @media (max-width: 600px) {
+      #container {
+        flex-direction: column;
+        align-items: center;
+      }
+      #leftPanel, #rightPanel {
+        width: 100%;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+      }
+      #gameCanvas {
+        margin: 0 auto;
+      }
+      #rightPanel img {
+        max-width: 50%;
+        height: auto;
+      }
+      /* Make buttons full-width and taller on mobile */
+      #attackBtn, #restart {
+        width: 90%;
+        height: 3rem;
+        font-size: 1.2rem;
+        margin: 0.5rem 0;
+      }
+    }
+    /* Desktop: hide attackBtn */
+    #attackBtn { display: none; }
+    @media (max-width: 600px) {
+      #attackBtn { display: block; }
+    }
+
+    /* Ensure mute button is on top and clickable */
+    #muteToggle { z-index: 1000; pointer-events: auto; }
+    /* Mobile-specific image scaling */
+    @media (max-width: 600px) {
+      #rightPanel img { max-width: 50%; height: auto; }
+      /* Make buttons full-width on mobile */
+      #attackBtn, #restart { width: 100%; }
+    }
+  </style>
 </head>
 <body>
   <!-- Mute Toggle -->
   <button id="muteToggle" tabindex="-1">🔇</button>
 
-
   <div id="container">
+    
     <div id="leftPanel">
       <div id="bossBarContainer"><div id="bossBar"></div></div>
       <canvas id="gameCanvas" width="300" height="300" tabindex="0"></canvas>
@@ -21,6 +66,7 @@
           <span>Beds: <strong id="attempt">0</strong>/5</span>
         </div>
         <div id="lastHit">Last Hit: <span id="hitAmt">—</span></div>
+        <button id="attackBtn">Attack</button>
         <button id="restart">Restart</button>
       </div>
     </div>

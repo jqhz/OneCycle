@@ -5,60 +5,48 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Dragon Timing Minigame</title>
   <link rel="stylesheet" href="style.css">
-  <style>
-    html, body {
-      overflow: hidden; /* Prevent scrolling on mobile */
-    }
-    /* Ensure mute button is on top and clickable */
-    #muteToggle { z-index: 1000; pointer-events: auto; }
-
-    @media (max-width: 600px) {
-      #container {
-        flex-direction: column;
-        align-items: center;
-        overflow: hidden;
-      }
-      #leftPanel, #rightPanel {
-        width: 100%;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-      }
-      #gameCanvas {
-        margin: 0 auto;
-      }
-      #rightPanel {
-        flex-direction: row;
-        justify-content: center;
-        gap: 0.5rem;
-      }
-      #rightPanel img {
-        max-width: 30%;
-        height: auto;
-      }
-      /* Make buttons full-width and taller on mobile */
-      #attackBtn, #restart {
-        width: 90%;
-        height: 3.5rem;
-        font-size: 1.2rem;
-        margin: 0.5rem 0;
-      }
-    }
-
-    /* Desktop: hide attackBtn */
-    #attackBtn { display: none; }
-    @media (max-width: 600px) {
-      #attackBtn { display: block; }
-    }
-  </style>
 </head>
 <body>
   <!-- Mute Toggle -->
   <button id="muteToggle" tabindex="-1">🔇</button>
 
-  <div id="container">
-    
+  <!-- Coin Display -->
+  <div id="coinDisplay">Gold: <span id="goldCount">0</span></div>
 
+  <!-- Menu Toggle -->
+  <button id="menuToggle">☰</button>
+
+  <!-- Menu Modal -->
+  <div id="menuModal">
+    <div id="menuContent">
+      <div class="menuHeader">
+        <h2>Menu</h2>
+        <button class="closeBtn" id="closeMenu">×</button>
+      </div>
+      <div class="menuButtons">
+        <button data-panel="settings" class="active">Settings</button>
+        <button data-panel="roulette">Roulette</button>
+        <button data-panel="shop">Shop</button>
+      </div>
+      <!-- Settings Panel -->
+      <div id="settings" class="panel active">
+        <label for="volume">Volume: <span id="volLabel">0%</span></label>
+        <input type="range" id="volume" min="0" max="100" value="0">
+      </div>
+      <!-- Roulette Panel -->
+      <div id="roulette" class="panel">
+        <button class="spinBtn">Spin for 100 Gold</button>
+        <div id="spinResult"></div>
+      </div>
+      <!-- Shop Panel -->
+      <div id="shop" class="panel">
+        <p>Shop upgrades coming soon!</p>
+      </div>
+    </div>
+  </div>
+
+  <div id="container">
+    <!-- original game content... -->
     <div id="leftPanel">
       <div id="bossBarContainer"><div id="bossBar"></div></div>
       <canvas id="gameCanvas" width="300" height="300" tabindex="0"></canvas>
@@ -79,7 +67,6 @@
       <img id="explosion" src="src/boom1.gif" alt="Explosion" />
     </div>
   </div>
-  
 
   <!-- Sound Effects -->
   <audio id="flap" src="src/flap.mp3" loop muted></audio>

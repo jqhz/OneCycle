@@ -103,52 +103,6 @@
     }
     
   </style>
-  <style>
-    html, body {
-      overflow: hidden; /* Prevent scrolling on mobile */
-    }
-    /* Ensure mute button is on top and clickable */
-    #muteToggle { z-index: 1000; pointer-events: auto; }
-
-    @media (max-width: 600px) {
-      #container {
-        flex-direction: column;
-        align-items: center;
-        overflow: hidden;
-      }
-      #leftPanel, #rightPanel {
-        width: 100%;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-      }
-      #gameCanvas {
-        margin: 0 auto;
-      }
-      #rightPanel {
-        flex-direction: row;
-        justify-content: center;
-        gap: 0.5rem;
-      }
-      #rightPanel img {
-        max-width: 30%;
-        height: auto;
-      }
-      /* Make buttons full-width and taller on mobile */
-      #attackBtn, #restart {
-        width: 90%;
-        height: 3.5rem;
-        font-size: 1.2rem;
-        margin: 0.5rem 0;
-      }
-    }
-
-    /* Desktop: hide attackBtn */
-    #attackBtn { display: none; }
-    @media (max-width: 600px) {
-      #attackBtn { display: block; }
-    }
-  </style>
 
 </head>
 <body>

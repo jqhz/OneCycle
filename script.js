@@ -1,11 +1,71 @@
-const MAX_HEALTH=200, MAX_ATTEMPTS=5, MAX_DMG=50, MIN_DMG=15;
-const OUTER_TH=20*Math.PI/180, SPIN_SPEED=0.04, SEGMENTS=5;
-const SEG_WF=1.5, TOTAL_ARC=2*OUTER_TH*SEG_WF, SEG_ARC=TOTAL_ARC/SEGMENTS;
-const DEBOUNCE_MS=300;
+  // —— New Currency & Menu Logic ——
+  const COIN_KEY = 'gold';
+  let gold = parseInt(localStorage.getItem(COIN_KEY)) || 0;
+  function updateGoldDisplay() {
+    document.getElementById('goldCount').textContent = gold;
+    localStorage.setItem(COIN_KEY, gold);
+  }
+  function awardGold(amount) {
+    gold += amount;
+    updateGoldDisplay();
+  }
+  updateGoldDisplay();
 
-let dragonHealth, attempt, wheelAngle, targetAngle, gameOver, animId;
-let lastKeyTime=0, soundsOn=false, justRestarted=false, lastTime=performance.now();
-const c=document.getElementById('gameCanvas'), ctx=c.getContext('2d');
+  // Menu open/close & tab switching
+  const menuBtn = document.getElementById('menuToggle'),
+        menuModal = document.getElementById('menuModal'),
+        closeMenuBtn = document.getElementById('closeMenu'),
+        menuTabs = document.querySelectorAll('.menuButtons button'),
+        panels = document.querySelectorAll('.panel');
+
+  menuBtn.addEventListener('click', () => menuModal.style.display = 'flex');
+  closeMenuBtn.addEventListener('click', () => menuModal.style.display = 'none');
+  menuTabs.forEach(btn => btn.addEventListener('click', () => {
+    menuTabs.forEach(b=>b.classList.remove('active'));
+    panels.forEach(p=>p.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById(btn.dataset.panel).classList.add('active');
+  }));
+
+  // Volume control
+  const volumeInput = document.getElementById('volume'),
+        volLabel    = document.getElementById('volLabel');
+  volumeInput.addEventListener('input', e => {
+    const v = e.target.value;
+    volLabel.textContent = v + '%';
+    document.getElementById('flap').volume = v/100;
+    document.getElementById('explode').volume = v/100;
+  });
+
+  // Roulette spin
+  const spinBtn    = document.querySelector('.spinBtn'),
+        spinResult = document.getElementById('spinResult');
+  const items = [
+    {name: 'Gold Nugget', value: 50,  img: 'src/nugget.png'},
+    {name: 'Gold Bar',    value: 200, img: 'src/bar.png'},
+    {name: 'Gold Block',  value: 500, img: 'src/block.png'},
+    {name: 'Nether Star', value:1000, img: 'src/star.png'}
+  ];
+  spinBtn.addEventListener('click', () => {
+    if (gold < 100) {
+      spinResult.textContent = 'Not enough gold!';
+      return;
+    }
+    gold -= 100; updateGoldDisplay();
+    const prize = items[Math.floor(Math.random()*items.length)];
+    awardGold(prize.value);
+    spinResult.innerHTML = `You got <strong>${prize.name}</strong>!<br>Value: ${prize.value}`;
+  });
+
+  // —— Original Game Logic ——
+  const MAX_HEALTH=200, MAX_ATTEMPTS=5, MAX_DMG=50, MIN_DMG=15;
+  const OUTER_TH=20*Math.PI/180, SPIN_SPEED=0.04, SEGMENTS=5;
+  const SEG_WF=1.5, TOTAL_ARC=2*OUTER_TH*SEG_WF, SEG_ARC=TOTAL_ARC/SEGMENTS;
+  const DEBOUNCE_MS=300;
+
+  let dragonHealth, attempt, wheelAngle, targetAngle, gameOver, animId;
+  let lastKeyTime=0, soundsOn=false, justRestarted=false, lastTime=performance.now();
+  const c=document.getElementById('gameCanvas'), ctx=c.getContext('2d');
 const CX=c.width/2, CY=c.height/2, R=120;
 const healthEl=document.getElementById('health');
 const attEl=document.getElementById('attempt');
@@ -109,12 +169,19 @@ function loop(){
   animId = requestAnimationFrame(loop);
 }
 
-function end(won){
-  gameOver=true; cancelAnimationFrame(animId);
-  if(soundsOn) flapSfx.pause();
-  overlay.className='show '+(won?'win':'lose');
-  msg.textContent=won?'🎉 You Win!':'❌ Game Over';
+function end(won) {
+  gameOver = true;
+  cancelAnimationFrame(animId);
+
+  if (soundsOn) flapSfx.pause();
+
+  overlay.className = 'show ' + (won ? 'win' : 'lose');
+  msg.textContent    = won ? '🎉 You Win!' : '❌ Game Over';
+
+  // ← award 100 gold on win
+  if (won) awardGold(100);
 }
+
 
 window.addEventListener('keydown', e => {
   if (!(e.code === 'Space' || e.key === ' ' || e.keyCode === 32)) return;
@@ -155,3 +222,4 @@ function init(){
 }
 
 init();
+  // Then your existing init()/restart(), animation loop, input handlers, etc.

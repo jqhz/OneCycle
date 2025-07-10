@@ -85,3 +85,145 @@ button:hover { background:#666; }
     display: inline-block;
   }
 }
+
+/*===============================================================*/
+html, body { overflow: hidden; }
+#muteToggle { z-index: 1000; pointer-events: auto; }
+/* Coin display */
+#coinDisplay {
+  position: absolute;
+  top: 10px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(68,68,68,0.8);
+  padding: 0.3rem 0.6rem;
+  border-radius: 4px;
+  font-size: 1rem;
+  z-index: 1000;
+}
+/* Menu button */
+#menuToggle {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background: #444;
+  border: none;
+  border-radius: 4px;
+  color: #fff;
+  font-size: 1.2rem;
+  padding: 0.3rem 0.6rem;
+  cursor: pointer;
+  z-index: 1000;
+}
+/* Modal overlay */
+#menuModal {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0,0,0,0.7);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  z-index: 2000;
+}
+#menuContent {
+  background: #222;
+  padding: 1rem;
+  border-radius: 8px;
+  width: 90%; max-width: 400px;
+  color: #fff;
+}
+.menuHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+.menuHeader h2 { margin: 0; font-size: 1.2rem; }
+.closeBtn {
+  background: none;
+  border: none;
+  font-size: 1.2rem;
+  color: #fff;
+  cursor: pointer;
+}
+.menuButtons {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+.menuButtons button {
+  flex: 1;
+  padding: 0.5rem;
+  background: #444;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  color: #fff;
+}
+.menuButtons button.active { background: #666; }
+.panel { display: none; }
+.panel.active { display: block; }
+/* Volume slider */
+.panel label { display: block; margin-bottom: 0.5rem; }
+.panel input[type=range] { width: 100%; }
+/* Spin button styles */
+.spinBtn {
+  width: 100%;
+  padding: 0.8rem;
+  font-size: 1rem;
+  background: #ff8;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  margin-bottom: 0.5rem;
+}
+/* Responsive tweaks */
+@media (max-width: 600px) {
+  #menuContent { width: 95%; }
+  .spinBtn { font-size: 1.2rem; }
+}
+/*===============================================================*/
+html, body {
+  overflow: hidden; /* Prevent scrolling on mobile */
+}
+/* Ensure mute button is on top and clickable */
+#muteToggle { z-index: 1000; pointer-events: auto; }
+
+@media (max-width: 600px) {
+  #container {
+    flex-direction: column;
+    align-items: center;
+    overflow: hidden;
+  }
+  #leftPanel, #rightPanel {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+  #gameCanvas {
+    margin: 0 auto;
+  }
+  #rightPanel {
+    flex-direction: row;
+    justify-content: center;
+    gap: 0.5rem;
+  }
+  #rightPanel img {
+    max-width: 30%;
+    height: auto;
+  }
+  /* Make buttons full-width and taller on mobile */
+  #attackBtn, #restart {
+    width: 90%;
+    height: 3.5rem;
+    font-size: 1.2rem;
+    margin: 0.5rem 0;
+  }
+}
+
+/* Desktop: hide attackBtn */
+#attackBtn { display: none; }
+@media (max-width: 600px) {
+  #attackBtn { display: block; }
+}

@@ -1,0 +1,448 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Dragon Timing Minigame</title>
+  <link rel="stylesheet" href="style.css">
+  <style>
+    html, body { overflow: hidden; }
+    #muteToggle { z-index: 1000; pointer-events: auto; }
+    /* Coin display */
+    #coinDisplay {
+      position: absolute;
+      top: 10px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(68,68,68,0.8);
+      padding: 0.3rem 0.6rem;
+      border-radius: 4px;
+      font-size: 1rem;
+      z-index: 1000;
+    }
+    /* Menu button */
+    #menuToggle {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      background: #444;
+      border: none;
+      border-radius: 4px;
+      color: #fff;
+      font-size: 1.2rem;
+      padding: 0.3rem 0.6rem;
+      cursor: pointer;
+      z-index: 1000;
+    }
+    /* Modal overlay */
+    #menuModal {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0,0,0,0.7);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 2000;
+    }
+    #menuContent {
+      background: #222;
+      padding: 1rem;
+      border-radius: 8px;
+      width: 90%; max-width: 400px;
+      color: #fff;
+    }
+    .menuHeader {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1rem;
+    }
+    .menuHeader h2 { margin: 0; font-size: 1.2rem; }
+    .closeBtn {
+      background: none;
+      border: none;
+      font-size: 1.2rem;
+      color: #fff;
+      cursor: pointer;
+    }
+    .menuButtons {
+      display: flex;
+      gap: 0.5rem;
+      margin-bottom: 1rem;
+    }
+    .menuButtons button {
+      flex: 1;
+      padding: 0.5rem;
+      background: #444;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      color: #fff;
+    }
+    .menuButtons button.active { background: #666; }
+    .panel { display: none; }
+    .panel.active { display: block; }
+    /* Volume slider */
+    .panel label { display: block; margin-bottom: 0.5rem; }
+    .panel input[type=range] { width: 100%; }
+    /* Spin button styles */
+    .spinBtn {
+      width: 100%;
+      padding: 0.8rem;
+      font-size: 1rem;
+      background: #ff8;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      margin-bottom: 0.5rem;
+    }
+    /* Responsive tweaks */
+    @media (max-width: 600px) {
+      #menuContent { width: 95%; }
+      .spinBtn { font-size: 1.2rem; }
+    }
+    
+  </style>
+  <style>
+    html, body {
+      overflow: hidden; /* Prevent scrolling on mobile */
+    }
+    /* Ensure mute button is on top and clickable */
+    #muteToggle { z-index: 1000; pointer-events: auto; }
+
+    @media (max-width: 600px) {
+      #container {
+        flex-direction: column;
+        align-items: center;
+        overflow: hidden;
+      }
+      #leftPanel, #rightPanel {
+        width: 100%;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+      }
+      #gameCanvas {
+        margin: 0 auto;
+      }
+      #rightPanel {
+        flex-direction: row;
+        justify-content: center;
+        gap: 0.5rem;
+      }
+      #rightPanel img {
+        max-width: 30%;
+        height: auto;
+      }
+      /* Make buttons full-width and taller on mobile */
+      #attackBtn, #restart {
+        width: 90%;
+        height: 3.5rem;
+        font-size: 1.2rem;
+        margin: 0.5rem 0;
+      }
+    }
+
+    /* Desktop: hide attackBtn */
+    #attackBtn { display: none; }
+    @media (max-width: 600px) {
+      #attackBtn { display: block; }
+    }
+  </style>
+
+</head>
+<body>
+  <!-- Mute Toggle -->
+  <button id="muteToggle" tabindex="-1">🔇</button>
+
+  <!-- Coin Display -->
+  <div id="coinDisplay">Gold: <span id="goldCount">0</span></div>
+
+  <!-- Menu Toggle -->
+  <button id="menuToggle">☰</button>
+
+  <!-- Menu Modal -->
+  <div id="menuModal">
+    <div id="menuContent">
+      <div class="menuHeader">
+        <h2>Menu</h2>
+        <button class="closeBtn" id="closeMenu">×</button>
+      </div>
+      <div class="menuButtons">
+        <button data-panel="settings" class="active">Settings</button>
+        <button data-panel="roulette">Roulette</button>
+        <button data-panel="shop">Shop</button>
+      </div>
+      <!-- Settings Panel -->
+      <div id="settings" class="panel active">
+        <label for="volume">Volume: <span id="volLabel">0%</span></label>
+        <input type="range" id="volume" min="0" max="100" value="0">
+      </div>
+      <!-- Roulette Panel -->
+      <div id="roulette" class="panel">
+        <button class="spinBtn">Spin for 100 Gold</button>
+        <div id="spinResult"></div>
+      </div>
+      <!-- Shop Panel -->
+      <div id="shop" class="panel">
+        <p>Shop upgrades coming soon!</p>
+      </div>
+    </div>
+  </div>
+
+  <div id="container">
+    <!-- original game content... -->
+    <div id="leftPanel">
+      <div id="bossBarContainer"><div id="bossBar"></div></div>
+      <canvas id="gameCanvas" width="300" height="300" tabindex="0"></canvas>
+      <div id="overlay"><span id="message"></span></div>
+      <div id="ui">
+        <div id="status">
+          <span>Health: <strong id="health">200</strong></span>
+          <span>Beds: <strong id="attempt">0</strong>/5</span>
+        </div>
+        <div id="lastHit">Last Hit: <span id="hitAmt">—</span></div>
+        <button id="attackBtn">Attack</button>
+        <button id="restart">Restart</button>
+      </div>
+    </div>
+    <div id="rightPanel">
+      <img id="enderDragon" src="src/endy_dragon.gif" alt="Ender Dragon" />
+      <img id="bed" src="src/White_Bed.png" alt="Bed" />
+      <img id="explosion" src="src/boom1.gif" alt="Explosion" />
+    </div>
+  </div>
+
+  <!-- Sound Effects -->
+  <audio id="flap" src="src/flap.mp3" loop muted></audio>
+  <audio id="explode" src="src/explode.mp3" muted></audio>
+
+  <script>
+  // —— New Currency & Menu Logic ——
+  const COIN_KEY = 'gold';
+  let gold = parseInt(localStorage.getItem(COIN_KEY)) || 0;
+  function updateGoldDisplay() {
+    document.getElementById('goldCount').textContent = gold;
+    localStorage.setItem(COIN_KEY, gold);
+  }
+  function awardGold(amount) {
+    gold += amount;
+    updateGoldDisplay();
+  }
+  updateGoldDisplay();
+
+  // Menu open/close & tab switching
+  const menuBtn = document.getElementById('menuToggle'),
+        menuModal = document.getElementById('menuModal'),
+        closeMenuBtn = document.getElementById('closeMenu'),
+        menuTabs = document.querySelectorAll('.menuButtons button'),
+        panels = document.querySelectorAll('.panel');
+
+  menuBtn.addEventListener('click', () => menuModal.style.display = 'flex');
+  closeMenuBtn.addEventListener('click', () => menuModal.style.display = 'none');
+  menuTabs.forEach(btn => btn.addEventListener('click', () => {
+    menuTabs.forEach(b=>b.classList.remove('active'));
+    panels.forEach(p=>p.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById(btn.dataset.panel).classList.add('active');
+  }));
+
+  // Volume control
+  const volumeInput = document.getElementById('volume'),
+        volLabel    = document.getElementById('volLabel');
+  volumeInput.addEventListener('input', e => {
+    const v = e.target.value;
+    volLabel.textContent = v + '%';
+    document.getElementById('flap').volume = v/100;
+    document.getElementById('explode').volume = v/100;
+  });
+
+  // Roulette spin
+  const spinBtn    = document.querySelector('.spinBtn'),
+        spinResult = document.getElementById('spinResult');
+  const items = [
+    {name: 'Gold Nugget', value: 50,  img: 'src/nugget.png'},
+    {name: 'Gold Bar',    value: 200, img: 'src/bar.png'},
+    {name: 'Gold Block',  value: 500, img: 'src/block.png'},
+    {name: 'Nether Star', value:1000, img: 'src/star.png'}
+  ];
+  spinBtn.addEventListener('click', () => {
+    if (gold < 100) {
+      spinResult.textContent = 'Not enough gold!';
+      return;
+    }
+    gold -= 100; updateGoldDisplay();
+    const prize = items[Math.floor(Math.random()*items.length)];
+    awardGold(prize.value);
+    spinResult.innerHTML = `You got <strong>${prize.name}</strong>!<br>Value: ${prize.value}`;
+  });
+
+  // —— Original Game Logic ——
+  const MAX_HEALTH=200, MAX_ATTEMPTS=5, MAX_DMG=50, MIN_DMG=15;
+  const OUTER_TH=20*Math.PI/180, SPIN_SPEED=0.04, SEGMENTS=5;
+  const SEG_WF=1.5, TOTAL_ARC=2*OUTER_TH*SEG_WF, SEG_ARC=TOTAL_ARC/SEGMENTS;
+  const DEBOUNCE_MS=300;
+
+  let dragonHealth, attempt, wheelAngle, targetAngle, gameOver, animId;
+  let lastKeyTime=0, soundsOn=false, justRestarted=false, lastTime=performance.now();
+  const c=document.getElementById('gameCanvas'), ctx=c.getContext('2d');
+const CX=c.width/2, CY=c.height/2, R=120;
+const healthEl=document.getElementById('health');
+const attEl=document.getElementById('attempt');
+const hitEl=document.getElementById('hitAmt');
+const overlay=document.getElementById('overlay');
+const msg=document.getElementById('message');
+const btn=document.getElementById('restart');
+const bossBar=document.getElementById('bossBar');
+const bedImg=document.getElementById('bed');
+const explImg=document.getElementById('explosion');
+const flapSfx=document.getElementById('flap');
+const explodeSfx=document.getElementById('explode');
+const muteBtn=document.getElementById('muteToggle');
+const attackBtn=document.getElementById('attackBtn');
+const now = performance.now();
+
+const SEG_COLORS=Array.from({length:SEGMENTS},(_,i)=>{
+  const t=i/(SEGMENTS-1),g=Math.round(255*(1-t));
+  return `rgb(255,${g},0)`;
+});
+
+function randAngle(){ return Math.random()*2*Math.PI; }
+function updateBossBar(){ bossBar.style.width=(dragonHealth/MAX_HEALTH*100)+'%'; }
+
+function doAttack(fromKey=false){
+  const now = performance.now();
+
+  // Only debounce key input
+  if (fromKey && now - lastKeyTime < DEBOUNCE_MS) return;
+
+  lastKeyTime = now;
+
+  if (justRestarted) return;
+
+  if (gameOver) {
+    init();
+    justRestarted = true;
+    setTimeout(() => justRestarted = false, 100);
+    return;
+  }
+
+  if (attempt >= MAX_ATTEMPTS) return;
+
+  if (soundsOn) {
+    explodeSfx.currentTime = 0;
+    explodeSfx.play();
+  }
+
+  bedImg.style.visibility = 'hidden';
+  explImg.style.opacity = 1;
+  setTimeout(() => {
+    explImg.style.opacity = 0;
+    bedImg.style.visibility = 'visible';
+  }, 100);
+
+  attempt++;
+  attEl.textContent = attempt;
+
+  let rel = wheelAngle - (targetAngle - TOTAL_ARC/2);
+  rel = (rel % (2*Math.PI) + 2*Math.PI) % (2*Math.PI);
+
+  let dmg = 0;
+  if (rel < TOTAL_ARC) {
+    const idx = Math.min(SEGMENTS - 1, Math.floor(rel / SEG_ARC));
+    dmg = Math.round(MIN_DMG + (MAX_DMG - MIN_DMG) * (idx / (SEGMENTS - 1)));
+  }
+
+  dragonHealth = Math.max(0, dragonHealth - dmg);
+  healthEl.textContent = dragonHealth;
+  hitEl.textContent = dmg;
+  updateBossBar();
+
+  if (dragonHealth === 0) return end(true);
+  if (attempt === MAX_ATTEMPTS) return end(false);
+
+  targetAngle = randAngle();
+}
+
+
+function draw(){
+  ctx.clearRect(0,0,c.width,c.height);
+  ctx.beginPath();ctx.arc(CX,CY,R,0,2*Math.PI);ctx.fillStyle='#444';ctx.fill();
+  ctx.beginPath();ctx.arc(CX,CY,R+8,0,2*Math.PI);
+  ctx.strokeStyle='#555';ctx.lineWidth=16;ctx.stroke();
+  for(let i=0;i<SEGMENTS;i++){
+    const s=targetAngle-TOTAL_ARC/2+i*SEG_ARC;
+    ctx.beginPath();ctx.arc(CX,CY,R+8,s,s+SEG_ARC);
+    ctx.strokeStyle=SEG_COLORS[i];ctx.lineWidth=16;ctx.stroke();
+  }
+  ctx.strokeStyle='#0f0';ctx.lineWidth=4;
+  ctx.beginPath();ctx.moveTo(CX,CY);
+  ctx.lineTo(CX+Math.cos(wheelAngle)*R,CY+Math.sin(wheelAngle)*R);
+  ctx.stroke();
+}
+
+function loop(){
+  wheelAngle += SPIN_SPEED * (60 / (1000 / (performance.now() - lastTime)));
+  wheelAngle %= 2 * Math.PI;
+  lastTime = performance.now();
+  draw();
+  animId = requestAnimationFrame(loop);
+}
+
+function end(won) {
+  gameOver = true;
+  cancelAnimationFrame(animId);
+
+  if (soundsOn) flapSfx.pause();
+
+  overlay.className = 'show ' + (won ? 'win' : 'lose');
+  msg.textContent    = won ? '🎉 You Win!' : '❌ Game Over';
+
+  // ← award 100 gold on win
+  if (won) awardGold(100);
+}
+
+
+window.addEventListener('keydown', e => {
+  if (!(e.code === 'Space' || e.key === ' ' || e.keyCode === 32)) return;
+  doAttack(true); // key input — debounce applies
+});
+
+attackBtn.addEventListener('click', e => {
+  e.preventDefault();
+  e.stopImmediatePropagation();
+  doAttack(false); // mouse input — debounce skipped
+});
+attackBtn.addEventListener('touchstart', e => {
+  e.preventDefault();
+  e.stopImmediatePropagation();
+  doAttack(false); // touch input — debounce skipped
+});
+
+btn.addEventListener('click', () => init());
+muteBtn.addEventListener('click', () => {
+  soundsOn = !soundsOn;
+  muteBtn.textContent = soundsOn ? '🔊' : '🔇';
+  flapSfx.muted = !soundsOn;
+  explodeSfx.muted = !soundsOn;
+  if (soundsOn && !gameOver) flapSfx.play();
+  muteBtn.blur();
+});
+
+function init(){
+  cancelAnimationFrame(animId);
+  dragonHealth=MAX_HEALTH; attempt=0; wheelAngle=0;
+  targetAngle=randAngle(); gameOver=false; lastKeyTime=0;
+  healthEl.textContent=dragonHealth;
+  attEl.textContent=attempt;
+  hitEl.textContent='—'; overlay.className='';
+  updateBossBar(); bedImg.style.visibility='visible'; explImg.style.opacity=0;
+  if(soundsOn){ flapSfx.currentTime=0; flapSfx.muted=false; flapSfx.play(); }
+  c.focus(); loop();
+}
+
+init();
+  // Then your existing init()/restart(), animation loop, input handlers, etc.
+  </script>
+</body>
+</html>

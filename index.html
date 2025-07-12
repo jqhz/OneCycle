@@ -36,12 +36,19 @@
       <!-- Roulette Panel -->
       <div id="roulette" class="panel">
         <button class="spinBtn">Spin for 100 Gold</button>
+        <div id="reelContainer">
+            <div id="reel"></div>
+        </div>
         <div id="spinResult"></div>
       </div>
       <!-- Shop Panel -->
       <div id="shop" class="panel">
-        <p>Shop upgrades coming soon!</p>
-      </div>
+        <button class="buyBtn">Buy pet for 2000 Gold</button>
+        <div id="shopReelContainer">
+            <div id="shopReel"></div>
+        </div>
+        <div id="shopResult"></div>
+    </div>
     </div>
   </div>
 
@@ -71,7 +78,21 @@
   <!-- Sound Effects -->
   <audio id="flap" src="src/flap.mp3" loop muted></audio>
   <audio id="explode" src="src/explode.mp3" muted></audio>
+  <button id="petToggle" title="Your Pets"
+        style="position:fixed;bottom:1rem;right:1rem;
+               width:48px;height:48px;padding:0;
+               border:none;background:none;cursor:pointer;">
+  <img id="currentPetIcon" src="src/placeholder.png" alt="No Pet"
+       style="width:100%;height:100%;border-radius:4px;">
+</button>
 
+<div id="petModal" style="display:none;position:fixed;
+     bottom:4rem;right:1rem;background:#222;
+     padding:1rem;border:2px solid #888;border-radius:8px;flex-direction:column;">
+  <h4 style="margin:0 0 .5rem;color:white;">Select Your Pet</h4>
+  <div id="petList" style="display:flex;flex-wrap:wrap;gap:.5rem;"></div>
+  <button id="closePetModal" style="margin-top:.5rem;">Close</button>
+</div>
   <script src="script.js"></script>
 </body>
 </html>

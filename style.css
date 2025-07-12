@@ -228,3 +228,42 @@ html, body {
 @media (max-width: 600px) {
   #attackBtn { display: block; }
 }
+
+#reelContainer {
+        width: 200px;
+        height: 64px;
+        overflow: hidden;
+        margin: 0.5rem auto;
+        border: 2px solid #888;
+        position: relative;
+    }
+    #reel {
+        display: flex;
+        position: absolute;
+        left: 0;
+        top: 0;
+    }
+    #reel img {
+        width: 64px;
+        height: 64px;
+        margin: 0 4px;
+    }
+    /* ─── Shop Reel Styles ─── */
+    #shopReelContainer {
+        width: 200px;
+        height: 64px;
+        overflow: hidden;
+        margin: 0.5rem auto;
+        border: 2px solid #888;
+        position: relative;
+    }
+    #shopReel {
+        display: flex;
+        position: absolute;
+        left: 0; top: 0;
+    }
+    #shopReel img {
+        width: 64px;
+        height: 64px;
+        margin: 0 4px;
+    }

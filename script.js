@@ -52,10 +52,10 @@
   const spinBtn    = document.querySelector('.spinBtn'),
         spinResult = document.getElementById('spinResult');
   const items = [
-  { name: 'Gold Nugget',   value: 50,  img: 'src/nugget.png', weight: 60 },
-  { name: 'Gold Bar',      value: 200, img: 'src/bar.png',    weight: 30 },
-  { name: 'Gold Block',    value: 500, img: 'src/block.png',  weight:  9 },
-  { name: 'Nether Star',   value:1000, img: 'src/star.png',   weight:  1 }
+  { name: 'Gold Nugget',   value: 50,  img: 'src/nugget.png', weight: 40 },
+  { name: 'Gold Bar',      value: 200, img: 'src/bar.png',    weight: 40 },
+  { name: 'Gold Block',    value: 500, img: 'src/block.png',  weight: 19 },
+  { name: 'Nether Star',   value: 10000, img: 'src/star.png',   weight:  1 }
 ];
   let winnerIndex; // store this in outer scope
   const BLOCKS = 9;
@@ -123,10 +123,10 @@ let currentPetId = localStorage.getItem('currentPet') || null;
 
 const pets = [
   { id: 'none',        name: 'none',    img: 'src/placeholder.png',        weight: 0 },
-  { id: 'dog',        name: 'Walter',    img: 'src/wolf.png',        weight: 40 },
-  { id: 'sheep',      name: 'Sheep',  img: 'src/sheep.jpg',      weight: 30 },
-  { id: 'cat',      name: 'Spoingus',  img: 'src/cat.png',      weight: 20 },
-  { id: 'pig', name: 'Pig',  img: 'src/pig.jpg', weight: 10 }
+  { id: 'dog',        name: 'Walter',    img: 'src/wolf.png',        weight: 20 },
+  { id: 'sheep',      name: 'Sheep',  img: 'src/sheep.jpg',      weight: 40 },
+  { id: 'cat',      name: 'Spoingus',  img: 'src/cat.png',      weight: 10 },
+  { id: 'pig', name: 'Pig',  img: 'src/pig.jpg', weight: 30 }
 ];
 
 function savePets() {

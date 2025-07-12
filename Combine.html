@@ -25,6 +25,26 @@
         height: 64px;
         margin: 0 4px;
     }
+    /* ─── Shop Reel Styles ─── */
+    #shopReelContainer {
+        width: 200px;
+        height: 64px;
+        overflow: hidden;
+        margin: 0.5rem auto;
+        border: 2px solid #888;
+        position: relative;
+    }
+    #shopReel {
+        display: flex;
+        position: absolute;
+        left: 0; top: 0;
+    }
+    #shopReel img {
+        width: 64px;
+        height: 64px;
+        margin: 0 4px;
+    }
+
   </style>
 
 </head>
@@ -65,8 +85,12 @@
       </div>
       <!-- Shop Panel -->
       <div id="shop" class="panel">
-        <p>Shop upgrades coming soon!</p>
-      </div>
+        <button class="buyBtn">Buy pet for 200 Gold</button>
+        <div id="shopReelContainer">
+            <div id="shopReel"></div>
+        </div>
+        <div id="shopResult"></div>
+    </div>
     </div>
   </div>
 
@@ -96,7 +120,21 @@
   <!-- Sound Effects -->
   <audio id="flap" src="src/flap.mp3" loop muted></audio>
   <audio id="explode" src="src/explode.mp3" muted></audio>
+  <button id="petToggle" title="Your Pets"
+        style="position:fixed;bottom:1rem;right:1rem;
+               width:48px;height:48px;padding:0;
+               border:none;background:none;cursor:pointer;">
+  <img id="currentPetIcon" src="src/placeholder.png" alt="No Pet"
+       style="width:100%;height:100%;border-radius:4px;">
+</button>
 
+<div id="petModal" style="display:none;position:fixed;
+     bottom:4rem;right:1rem;background:#222;
+     padding:1rem;border:2px solid #888;border-radius:8px;flex-direction:column;">
+  <h4 style="margin:0 0 .5rem;color:white;">Select Your Pet</h4>
+  <div id="petList" style="display:flex;flex-wrap:wrap;gap:.5rem;"></div>
+  <button id="closePetModal" style="margin-top:.5rem;">Close</button>
+</div>
   <script>
   // —— New Currency & Menu Logic ——
   const COIN_KEY = 'gold';
@@ -204,6 +242,222 @@ spinBtn.addEventListener('click', () => {
       `You got <strong>${prize.name}</strong>!<br>Value: ${prize.value}`;
   }, { once: true });
 });
+//================================================================================================================
+// ─── Pet Shop & Selector Logic ───
+
+// 1) Pet definitions & storage
+const PET_KEY    = 'ownedPets';
+let ownedPets    = JSON.parse(localStorage.getItem(PET_KEY)) || [];
+let currentPetId = localStorage.getItem('currentPet') || null;
+
+const pets = [
+  { id: 'none',        name: 'none',    img: 'src/placeholder.png',        weight: 0 },
+  { id: 'dog',        name: 'Walter',    img: 'src/wolf.png',        weight: 40 },
+  { id: 'sheep',      name: 'Sheep',  img: 'src/sheep.jpg',      weight: 30 },
+  { id: 'cat',      name: 'Spoingus',  img: 'src/cat.png',      weight: 20 },
+  { id: 'pig', name: 'Pig',  img: 'src/pig.jpg', weight: 10 }
+];
+
+function savePets() {
+  localStorage.setItem(PET_KEY, JSON.stringify(ownedPets));
+  if (currentPetId) localStorage.setItem('currentPet', currentPetId);
+}
+
+// 2) Shop reel hookup
+const buyBtn     = document.querySelector('.buyBtn');
+const shopReel   = document.getElementById('shopReel');
+const shopResult = document.getElementById('shopResult');
+const SHOP_BLOCKS   = 7;
+const SHOP_ITEM_W   = 64 + 8;   // image width + margin
+const SHOP_CONT_W   = 200;
+const SHOP_SPIN_DUR = 1.5;      // seconds
+
+buyBtn.addEventListener('click', () => {
+  if (gold < 200) {
+    shopResult.textContent = 'Not enough gold!';
+    return;
+  }
+  gold -= 200; updateGoldDisplay();
+
+  // reset reel
+  shopReel.style.transition = 'none';
+  shopReel.style.transform  = 'translateX(0)';
+  void shopReel.offsetWidth;
+
+  // build pet strip
+  shopReel.innerHTML = '';
+  const seq = [];
+  for (let i = 0; i < SHOP_BLOCKS; i++) seq.push(...pets);
+  seq.forEach(p => {
+    const img = new Image();
+    img.src = p.img;
+    img.alt = p.name;
+    shopReel.appendChild(img);
+  });
+
+  // pick winner
+  const winnerIdx         = weightedRandomIndex(pets);
+  const midBlock          = Math.floor(SHOP_BLOCKS / 2);
+  const absoluteWinnerIdx = midBlock * pets.length + winnerIdx;
+  const target = absoluteWinnerIdx * SHOP_ITEM_W
+               - (SHOP_CONT_W/2 - SHOP_ITEM_W/2);
+
+  // spin
+  setTimeout(() => {
+    shopReel.style.transition = `transform ${SHOP_SPIN_DUR}s ease-out`;
+    shopReel.style.transform  = `translateX(-${target}px)`;
+  }, 50);
+
+  // on finish → award pet
+  shopReel.addEventListener('transitionend', () => {
+    const pet = pets[winnerIdx];
+    if (!ownedPets.includes(pet.id)) {
+      ownedPets.push(pet.id);
+      savePets();
+      updatePetList();
+      shopResult.innerHTML = `You found <strong>${pet.name}</strong>!`;
+    } else {
+      shopResult.innerHTML = `You already have <strong>${pet.name}</strong>.`;
+    }
+  }, { once: true });
+});
+
+// 3) Current‐pet icon & modal
+const currentIcon    = document.getElementById('currentPetIcon');
+const petToggle      = document.getElementById('petToggle');
+const petModal       = document.getElementById('petModal');
+const closePetModal  = document.getElementById('closePetModal');
+const petList        = document.getElementById('petList');
+
+const petSounds = {
+  none:    { clip: new Audio('src/silence.mp3'),    interval: null, delay: 0 },
+  cat:  { clip: new Audio('src/meow.mp3'),       interval: null, delay: 30000 },
+  dog:    { clip: new Audio('src/bark.mp3'),      interval: null, delay: 45000 },
+  sheep:  { clip: new Audio('src/baa.mp3'),     interval: null, delay: 20000 },
+  pig: { clip: new Audio('src/oink.mp3'),   interval: null, delay: 60000 }
+};
+
+function scheduleNextPetSound() {
+  const key = currentPetId || 'none';
+  const ps  = petSounds[key];
+  if (!ps || !ps.clip || ps.delay === 0) return;
+
+  // play now
+  ps.clip.currentTime = 0;
+  ps.clip.play().catch(() => {});
+
+  // pick a new random delay within ±20% of base delay
+  const variance    = 0.2;           // 20%
+  const base        = ps.delay;
+  const minDelay    = base * (1 - variance);
+  const maxDelay    = base * (1 + variance);
+  const nextDelay   = Math.random() * (maxDelay - minDelay) + minDelay;
+
+  // schedule the next play
+  ps.timeoutId = setTimeout(scheduleNextPetSound, nextDelay);
+}
+
+function stopPetSound() {
+  const key = currentPetId || 'none';
+  const ps  = petSounds[key];
+  if (ps && ps.timeoutId) {
+    clearTimeout(ps.timeoutId);
+    ps.timeoutId = null;
+  }
+}
+
+function startPetSound() {
+  stopPetSound();
+  // immediate schedule (will also play immediately)
+  scheduleNextPetSound();
+}
+function refreshCurrentPet() {
+  // look up the pet object (will be undefined if none or bad id)
+  const pet = pets.find(p => p.id === currentPetId);
+
+  if (!pet) {
+    // either “None” or invalid → show placeholder
+    currentIcon.src = 'src/placeholder.png';
+    currentIcon.alt = 'No Pet';
+  } else {
+    // valid pet
+    currentIcon.src = pet.img;
+    currentIcon.alt = pet.name;
+  }
+
+  // restart sound loop for whatever is now active
+  startPetSound();
+}
+function updatePetList() {
+  // Clear out any existing entries
+  petList.innerHTML = '';
+
+  // 1) “None” option
+  const nonePet = pets.find(p => p.id === 'none');
+  const noneBtn = document.createElement('button');
+  noneBtn.style.border = 'none';
+  noneBtn.style.padding = '0';
+  noneBtn.style.background = 'none';
+  noneBtn.style.cursor = 'pointer';
+  noneBtn.innerHTML = `
+    <div style="
+      width:48px; height:48px;
+      display:flex; align-items:center; justify-content:center;
+      background:#333; border-radius:8px; border:2px solid #666;
+      color:#aaa; font-size:12px;">
+      ${nonePet.name}
+    </div>
+  `;
+  noneBtn.addEventListener('click', () => {
+    currentPetId = null;
+    savePets();
+    refreshCurrentPet();
+    petModal.style.display = 'none';
+  });
+  petList.appendChild(noneBtn);
+
+  // 2) Owned pets (exclude 'none' from this list)
+  ownedPets
+    .filter(id => id !== 'none')
+    .forEach(id => {
+      const pet = pets.find(p => p.id === id);
+      if (!pet) return;  // safety check
+
+      const btn = document.createElement('button');
+      btn.style.border = 'none';
+      btn.style.padding = '0';
+      btn.style.background = 'none';
+      btn.style.cursor = 'pointer';
+      btn.innerHTML = `
+        <img src="${pet.img}" alt="${pet.name}"
+             style="width:48px;height:48px;border-radius:8px;border:2px solid #666;">
+      `;
+      btn.addEventListener('click', () => {
+        currentPetId = id;
+        savePets();
+        refreshCurrentPet();
+        petModal.style.display = 'none';
+      });
+      petList.appendChild(btn);
+    });
+}
+
+
+petToggle.addEventListener('click', () => {
+  updatePetList();
+  petModal.style.display = 'flex';
+});
+closePetModal.addEventListener('click', () => {
+  petModal.style.display = 'none';
+});
+
+// initialize icon on load
+refreshCurrentPet();
+updatePetList();
+
+// map pet‑id → audio clip + interval ref
+
+
 
   // —— Original Game Logic ——
   const MAX_HEALTH=200, MAX_ATTEMPTS=5, MAX_DMG=50, MIN_DMG=15;

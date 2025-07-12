@@ -167,7 +167,7 @@ html, body { overflow: hidden; }
 .panel label { display: block; margin-bottom: 0.5rem; }
 .panel input[type=range] { width: 100%; }
 /* Spin button styles */
-.spinBtn {
+.spinBtn,.buyBtn {
   width: 100%;
   padding: 0.8rem;
   font-size: 1rem;
@@ -181,6 +181,7 @@ html, body { overflow: hidden; }
 @media (max-width: 600px) {
   #menuContent { width: 95%; }
   .spinBtn { font-size: 1.2rem; }
+  .buyBtn { font-size: 1.2rem; }
 }
 /*===============================================================*/
 html, body {

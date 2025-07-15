@@ -131,7 +131,11 @@ const pets = [
 
 function savePets() {
   localStorage.setItem(PET_KEY, JSON.stringify(ownedPets));
-  if (currentPetId) localStorage.setItem('currentPet', currentPetId);
+  if (currentPetId) {
+    localStorage.setItem('currentPet', currentPetId);
+  } else {
+    localStorage.setItem('currentPet', "none");
+  }
 }
 
 // 2) Shop reel hookup
